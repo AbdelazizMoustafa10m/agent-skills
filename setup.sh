@@ -27,6 +27,9 @@ err()  { printf "${RED}[ERR]${RESET}   %s\n" "$1"; }
 # Agent directories that support the open skills standard
 AGENT_DIRS=(".claude" ".codex" ".copilot" ".opencode" ".agent" ".factory" ".agents" ".gemini" ".github")
 
+# Global agent home directories (user-level skills)
+GLOBAL_AGENT_HOMES=("$HOME/.claude" "$HOME/.codex" "$HOME/.gemini")
+
 # Project definitions: name|path|scope
 PROJECTS=(
   "finvault|$HOME/prj/prod/finvault|finvault"
@@ -45,6 +48,74 @@ echo ""
 link_count=0
 skip_count=0
 
+# Helper: link skills from a scope dir into a target skills/ directory
+# Usage: link_skills <scope_dir> <skills_dir> <label>
+link_skills() {
+  local scope_dir="$1"
+  local skills_dir="$2"
+  local label="$3"
+
+  mkdir -p "$skills_dir"
+
+  local skills=()
+  for skill_dir in "$scope_dir"/*/; do
+    [ -f "$skill_dir/SKILL.md" ] && skills+=("$(basename "$skill_dir")")
+  done
+
+  if [ ${#skills[@]} -eq 0 ]; then
+    return
+  fi
+
+  for skill_name in "${skills[@]}"; do
+    local repo_skill="$scope_dir/$skill_name"
+    local target_link="$skills_dir/$skill_name"
+
+    # Already a correct symlink?
+    if [ -L "$target_link" ]; then
+      local current
+      current="$(readlink "$target_link")"
+      if [ "$current" = "$repo_skill" ]; then
+        skip_count=$((skip_count + 1))
+        continue
+      fi
+      rm "$target_link"
+    fi
+
+    # Backup existing dir/file
+    if [ -e "$target_link" ]; then
+      local backup="${target_link}.bak.$(date +%Y%m%d%H%M%S)"
+      mv "$target_link" "$backup"
+      info "  $label/$skill_name — backed up existing"
+    fi
+
+    ln -s "$repo_skill" "$target_link"
+    link_count=$((link_count + 1))
+  done
+}
+
+# ═══════════════════════════════════════════
+#  Global (user-level) skills
+# ═══════════════════════════════════════════
+GLOBAL_DIR="$REPO_DIR/global"
+
+if [ -d "$GLOBAL_DIR" ] && [ -n "$(find "$GLOBAL_DIR" -maxdepth 2 -name SKILL.md 2>/dev/null)" ]; then
+  echo -e "${CYAN}── global ${DIM}(user-level skills → ~/.claude, ~/.codex, ~/.gemini)${RESET}"
+
+  for agent_home in "${GLOBAL_AGENT_HOMES[@]}"; do
+    [ ! -d "$agent_home" ] && continue
+    agent_name="$(basename "$agent_home")"
+    skills_dir="$agent_home/skills"
+    link_skills "$GLOBAL_DIR" "$skills_dir" "$agent_name/skills"
+    linked=$(find "$skills_dir" -maxdepth 1 -type l 2>/dev/null | wc -l | tr -d ' ')
+    echo -e "  ${GREEN}✓${RESET} ~/$agent_name/skills/ — $linked skills linked"
+  done
+
+  echo ""
+fi
+
+# ═══════════════════════════════════════════
+#  Project-level skills
+# ═══════════════════════════════════════════
 for project_def in "${PROJECTS[@]}"; do
   IFS='|' read -r name project_path scope <<< "$project_def"
 
@@ -61,13 +132,8 @@ for project_def in "${PROJECTS[@]}"; do
     continue
   fi
 
-  # Get list of skills (subdirectories with SKILL.md)
-  skills=()
-  for skill_dir in "$scope_dir"/*/; do
-    [ -f "$skill_dir/SKILL.md" ] && skills+=("$(basename "$skill_dir")")
-  done
-
-  if [ ${#skills[@]} -eq 0 ]; then
+  # Check there are skills
+  if [ -z "$(find "$scope_dir" -maxdepth 2 -name SKILL.md 2>/dev/null)" ]; then
     warn "$name — no skills found in $scope/"
     continue
   fi
@@ -78,35 +144,8 @@ for project_def in "${PROJECTS[@]}"; do
     # Only process agent dirs that exist in the project
     [ ! -d "$agent_dir" ] && continue
 
-    # Create skills/ subdirectory if it doesn't exist
     skills_dir="$agent_dir/skills"
-    mkdir -p "$skills_dir"
-
-    for skill_name in "${skills[@]}"; do
-      repo_skill="$scope_dir/$skill_name"
-      target_link="$skills_dir/$skill_name"
-
-      # Already a correct symlink?
-      if [ -L "$target_link" ]; then
-        current="$(readlink "$target_link")"
-        if [ "$current" = "$repo_skill" ]; then
-          skip_count=$((skip_count + 1))
-          continue
-        fi
-        # Wrong symlink — remove and re-link
-        rm "$target_link"
-      fi
-
-      # Backup existing dir/file
-      if [ -e "$target_link" ]; then
-        backup="${target_link}.bak.$(date +%Y%m%d%H%M%S)"
-        mv "$target_link" "$backup"
-        info "  $agent_dir_name/skills/$skill_name — backed up existing"
-      fi
-
-      ln -s "$repo_skill" "$target_link"
-      link_count=$((link_count + 1))
-    done
+    link_skills "$scope_dir" "$skills_dir" "$agent_dir_name/skills"
 
     # Count linked skills for this agent dir
     linked=$(find "$skills_dir" -maxdepth 1 -type l 2>/dev/null | wc -l | tr -d ' ')
