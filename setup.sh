@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Agent Skills Sync — Setup Script
-# Creates symlinks from each project's agent directories to this unified skills repo.
+# Agent Assets Sync — Setup Script
+# Creates symlinks for skills, agents, and commands from this unified repo
+# into each project's agent directories and user-level agent homes.
 #
-# One canonical copy of each skill, shared across all coding agents
+# One canonical copy of each asset, shared across all coding agents
 # (Claude Code, Codex CLI, Gemini CLI, Copilot, OpenCode, etc.)
 #
 # Usage:
@@ -22,12 +23,11 @@ RESET='\033[0m'
 log()  { printf "${GREEN}[OK]${RESET}    %s\n" "$1"; }
 warn() { printf "${YELLOW}[SKIP]${RESET}  %s\n" "$1"; }
 info() { printf "${CYAN}[INFO]${RESET}  %s\n" "$1"; }
-err()  { printf "${RED}[ERR]${RESET}   %s\n" "$1"; }
 
-# Agent directories that support the open skills standard
+# Agent directories within projects that support the open standards
 AGENT_DIRS=(".claude" ".codex" ".copilot" ".opencode" ".agent" ".factory" ".agents" ".gemini" ".github")
 
-# Global agent home directories (user-level skills)
+# Global agent home directories (user-level)
 GLOBAL_AGENT_HOMES=("$HOME/.claude" "$HOME/.codex" "$HOME/.gemini")
 
 # Project definitions: name|path|scope
@@ -39,82 +39,129 @@ PROJECTS=(
 
 echo ""
 echo "╔══════════════════════════════════════════╗"
-echo "║   Agent Skills Sync — Setup              ║"
+echo "║   Agent Assets Sync — Setup              ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
-info "Skills repo: $REPO_DIR"
+info "Repo: $REPO_DIR"
 echo ""
 
 link_count=0
 skip_count=0
 
-# Helper: link skills from a scope dir into a target skills/ directory
-# Usage: link_skills <scope_dir> <skills_dir> <label>
-link_skills() {
-  local scope_dir="$1"
-  local skills_dir="$2"
-  local label="$3"
+# ─────────────────────────────────────────────────
+# Helper: link a single item (file or directory)
+# Usage: link_one <source> <target>
+# ─────────────────────────────────────────────────
+link_one() {
+  local source="$1"
+  local target="$2"
 
-  mkdir -p "$skills_dir"
-
-  local skills=()
-  for skill_dir in "$scope_dir"/*/; do
-    [ -f "$skill_dir/SKILL.md" ] && skills+=("$(basename "$skill_dir")")
-  done
-
-  if [ ${#skills[@]} -eq 0 ]; then
-    return
+  if [ -L "$target" ]; then
+    local current
+    current="$(readlink "$target")"
+    if [ "$current" = "$source" ]; then
+      skip_count=$((skip_count + 1))
+      return
+    fi
+    rm "$target"
   fi
 
-  for skill_name in "${skills[@]}"; do
-    local repo_skill="$scope_dir/$skill_name"
-    local target_link="$skills_dir/$skill_name"
+  if [ -e "$target" ]; then
+    local backup="${target}.bak.$(date +%Y%m%d%H%M%S)"
+    mv "$target" "$backup"
+  fi
 
-    # Already a correct symlink?
-    if [ -L "$target_link" ]; then
-      local current
-      current="$(readlink "$target_link")"
-      if [ "$current" = "$repo_skill" ]; then
-        skip_count=$((skip_count + 1))
-        continue
-      fi
-      rm "$target_link"
-    fi
+  mkdir -p "$(dirname "$target")"
+  ln -s "$source" "$target"
+  link_count=$((link_count + 1))
+}
 
-    # Backup existing dir/file
-    if [ -e "$target_link" ]; then
-      local backup="${target_link}.bak.$(date +%Y%m%d%H%M%S)"
-      mv "$target_link" "$backup"
-      info "  $label/$skill_name — backed up existing"
-    fi
+# ─────────────────────────────────────────────────
+# Link skills: each skill is a directory with SKILL.md
+# Usage: link_skills <scope_dir>/skills  <target_skills_dir>
+# ─────────────────────────────────────────────────
+link_skills() {
+  local source_dir="$1"
+  local target_dir="$2"
+  [ ! -d "$source_dir" ] && return
 
-    ln -s "$repo_skill" "$target_link"
-    link_count=$((link_count + 1))
+  mkdir -p "$target_dir"
+  for skill in "$source_dir"/*/; do
+    [ -f "$skill/SKILL.md" ] || continue
+    link_one "$skill" "$target_dir/$(basename "$skill")"
   done
 }
 
+# ─────────────────────────────────────────────────
+# Link agents/commands: each is a .md file
+# Usage: link_md_files <scope_dir>/agents  <target_agents_dir>
+# ─────────────────────────────────────────────────
+link_md_files() {
+  local source_dir="$1"
+  local target_dir="$2"
+  [ ! -d "$source_dir" ] && return
+
+  local has_files=false
+  for f in "$source_dir"/*.md; do
+    [ -f "$f" ] && has_files=true && break
+  done
+  [ "$has_files" = true ] || return 0
+
+  mkdir -p "$target_dir"
+  for f in "$source_dir"/*.md; do
+    [ -f "$f" ] || continue
+    link_one "$f" "$target_dir/$(basename "$f")"
+  done
+}
+
+# ─────────────────────────────────────────────────
+# Count symlinks in a directory
+# ─────────────────────────────────────────────────
+count_links() {
+  find "$1" -maxdepth 1 -type l 2>/dev/null | wc -l | tr -d ' '
+}
+
 # ═══════════════════════════════════════════
-#  Global (user-level) skills
+#  Global (user-level) assets
 # ═══════════════════════════════════════════
 GLOBAL_DIR="$REPO_DIR/global"
 
-if [ -d "$GLOBAL_DIR" ] && [ -n "$(find "$GLOBAL_DIR" -maxdepth 2 -name SKILL.md 2>/dev/null)" ]; then
-  echo -e "${CYAN}── global ${DIM}(user-level skills → ~/.claude, ~/.codex, ~/.gemini)${RESET}"
+has_global=false
+for type in skills agents commands; do
+  if [ -d "$GLOBAL_DIR/$type" ] && [ -n "$(ls -A "$GLOBAL_DIR/$type" 2>/dev/null)" ]; then
+    has_global=true
+    break
+  fi
+done
+
+if $has_global; then
+  echo -e "${CYAN}── global ${DIM}(user-level → ~/.claude, ~/.codex, ~/.gemini)${RESET}"
 
   for agent_home in "${GLOBAL_AGENT_HOMES[@]}"; do
     [ ! -d "$agent_home" ] && continue
     agent_name="$(basename "$agent_home")"
-    skills_dir="$agent_home/skills"
-    link_skills "$GLOBAL_DIR" "$skills_dir" "$agent_name/skills"
-    linked=$(find "$skills_dir" -maxdepth 1 -type l 2>/dev/null | wc -l | tr -d ' ')
-    echo -e "  ${GREEN}✓${RESET} ~/$agent_name/skills/ — $linked skills linked"
-  done
 
+    link_skills    "$GLOBAL_DIR/skills"   "$agent_home/skills"
+    link_md_files  "$GLOBAL_DIR/agents"   "$agent_home/agents"
+    link_md_files  "$GLOBAL_DIR/commands" "$agent_home/commands"
+
+    summary=""
+    for type in skills agents commands; do
+      [ -d "$agent_home/$type" ] || continue
+      n=$(count_links "$agent_home/$type")
+      if [ "$n" -gt 0 ]; then
+        summary="${summary:+$summary, }$n $type"
+      fi
+    done
+    if [ -n "$summary" ]; then
+      echo -e "  ${GREEN}✓${RESET} ~/$agent_name/ — $summary"
+    fi
+  done
   echo ""
 fi
 
 # ═══════════════════════════════════════════
-#  Project-level skills
+#  Project-level assets
 # ═══════════════════════════════════════════
 for project_def in "${PROJECTS[@]}"; do
   IFS='|' read -r name project_path scope <<< "$project_def"
@@ -124,32 +171,33 @@ for project_def in "${PROJECTS[@]}"; do
     continue
   fi
 
-  echo -e "${CYAN}── $name ${DIM}($project_path)${RESET}"
-
   scope_dir="$REPO_DIR/$scope"
   if [ ! -d "$scope_dir" ]; then
-    warn "$name — no skills scope dir ($scope), skipping"
+    warn "$name — no scope dir ($scope), skipping"
     continue
   fi
 
-  # Check there are skills
-  if [ -z "$(find "$scope_dir" -maxdepth 2 -name SKILL.md 2>/dev/null)" ]; then
-    warn "$name — no skills found in $scope/"
-    continue
-  fi
+  echo -e "${CYAN}── $name ${DIM}($project_path)${RESET}"
 
   for agent_dir_name in "${AGENT_DIRS[@]}"; do
     agent_dir="$project_path/$agent_dir_name"
-
-    # Only process agent dirs that exist in the project
     [ ! -d "$agent_dir" ] && continue
 
-    skills_dir="$agent_dir/skills"
-    link_skills "$scope_dir" "$skills_dir" "$agent_dir_name/skills"
+    link_skills    "$scope_dir/skills"   "$agent_dir/skills"
+    link_md_files  "$scope_dir/agents"   "$agent_dir/agents"
+    link_md_files  "$scope_dir/commands" "$agent_dir/commands"
 
-    # Count linked skills for this agent dir
-    linked=$(find "$skills_dir" -maxdepth 1 -type l 2>/dev/null | wc -l | tr -d ' ')
-    echo -e "  ${GREEN}✓${RESET} $agent_dir_name/skills/ — $linked skills linked"
+    summary=""
+    for type in skills agents commands; do
+      [ -d "$agent_dir/$type" ] || continue
+      n=$(count_links "$agent_dir/$type")
+      if [ "$n" -gt 0 ]; then
+        summary="${summary:+$summary, }$n $type"
+      fi
+    done
+    if [ -n "$summary" ]; then
+      echo -e "  ${GREEN}✓${RESET} $agent_dir_name/ — $summary"
+    fi
   done
 
   echo ""
@@ -158,7 +206,7 @@ done
 echo "Done! Created $link_count new links ($skip_count already up-to-date)."
 echo ""
 echo "Workflow:"
-echo "  1. Edit skills in ~/prj/agent-skills/ — all agents see the change instantly"
+echo "  1. Edit assets in ~/prj/agent-skills/ — all agents see changes instantly"
 echo "  2. Run 'agent-sync push' to sync across machines"
-echo "  3. Run 'agent-sync pull' + './setup.sh' on the other machine"
+echo "  3. Run 'agent-sync pull' on the other machine"
 echo ""
