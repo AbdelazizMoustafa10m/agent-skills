@@ -127,7 +127,7 @@ count_links() {
 GLOBAL_DIR="$REPO_DIR/global"
 
 has_global=false
-for type in skills agents commands; do
+for type in skills commands; do
   if [ -d "$GLOBAL_DIR/$type" ] && [ -n "$(ls -A "$GLOBAL_DIR/$type" 2>/dev/null)" ]; then
     has_global=true
     break
@@ -142,11 +142,10 @@ if $has_global; then
     agent_name="$(basename "$agent_home")"
 
     link_skills    "$GLOBAL_DIR/skills"   "$agent_home/skills"
-    link_md_files  "$GLOBAL_DIR/agents"   "$agent_home/agents"
     link_md_files  "$GLOBAL_DIR/commands" "$agent_home/commands"
 
     summary=""
-    for type in skills agents commands; do
+    for type in skills commands; do
       [ -d "$agent_home/$type" ] || continue
       n=$(count_links "$agent_home/$type")
       if [ "$n" -gt 0 ]; then
@@ -184,11 +183,10 @@ for project_def in "${PROJECTS[@]}"; do
     [ ! -d "$agent_dir" ] && continue
 
     link_skills    "$scope_dir/skills"   "$agent_dir/skills"
-    link_md_files  "$scope_dir/agents"   "$agent_dir/agents"
     link_md_files  "$scope_dir/commands" "$agent_dir/commands"
 
     summary=""
-    for type in skills agents commands; do
+    for type in skills commands; do
       [ -d "$agent_dir/$type" ] || continue
       n=$(count_links "$agent_dir/$type")
       if [ "$n" -gt 0 ]; then
