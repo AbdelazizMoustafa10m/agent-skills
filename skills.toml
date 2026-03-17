@@ -1,0 +1,24 @@
+# Agent Skills Sync Configuration
+# Defines which skills go to which project, and which agent directories to link into.
+#
+# Agent dirs are the tool-specific config directories within each project.
+# The setup script will create symlinks: {project}/{agent_dir}/skills/{skill} -> {repo}/{scope}/{skill}
+#
+# "scope" is the directory in this repo: finvault/, harvx/, raven/
+# Skills are symlinked into every agent dir that has a skills/ folder (or all listed below).
+
+# All agent directories that support the open skills standard
+[agents]
+dirs = [".claude", ".codex", ".copilot", ".opencode", ".agent", ".factory", ".agents", ".gemini", ".github"]
+
+[projects.finvault]
+path = "~/prj/prod/finvault"
+scope = "finvault"
+
+[projects.harvx]
+path = "~/prj/prod/harvx"
+scope = "harvx"
+
+[projects.raven]
+path = "~/prj/prod/raven"
+scope = "raven"
