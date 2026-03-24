@@ -35,6 +35,7 @@ PROJECTS=(
   "finvault|$HOME/prj/prod/finvault|finvault"
   "harvx|$HOME/prj/prod/harvx|harvx"
   "raven|$HOME/prj/prod/raven|raven"
+  "planora|$HOME/prj/planora|global"
 )
 
 echo ""

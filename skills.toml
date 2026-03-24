@@ -22,3 +22,7 @@ scope = "harvx"
 [projects.raven]
 path = "~/prj/prod/raven"
 scope = "raven"
+
+[projects.planora]
+path = "~/prj/planora"
+scope = "global"
