@@ -25,4 +25,4 @@ scope = "raven"
 
 [projects.planora]
 path = "~/prj/planora"
-scope = "global"
+scope = "planora"
