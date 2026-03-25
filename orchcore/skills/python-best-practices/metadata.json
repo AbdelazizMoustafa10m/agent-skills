@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "organization": "vRAGmate Engineering",
+  "date": "February 2026",
+  "abstract": "Comprehensive Python best practices guide for production microservices, designed for AI agents and LLMs. Contains 65 rules across 12 categories, prioritized by impact from critical (code simplification, type safety) through high (error handling, testing, architecture) to operational (database patterns, configuration, quality gates). Each rule includes detailed explanations, real-world examples comparing incorrect vs. correct implementations, and specific impact descriptions. Merged from two independently generated skill sets and enriched with production-infrastructure patterns (database/ORM, observability, resilience, timeouts). Derived from senior engineering review patterns on a Python 3.12+ FastAPI/Pydantic/SQLAlchemy monorepo.",
+  "references": [
+    "https://docs.python.org/3/whatsnew/3.12.html",
+    "https://docs.pydantic.dev/latest/",
+    "https://fastapi.tiangolo.com/",
+    "https://docs.sqlalchemy.org/en/20/",
+    "https://docs.pytest.org/en/stable/",
+    "https://docs.astral.sh/ruff/",
+    "https://mypy.readthedocs.io/en/stable/",
+    "https://peps.python.org/pep-0695/",
+    "https://peps.python.org/pep-0484/",
+    "https://opentelemetry.io/docs/languages/python/"
+  ],
+  "merge_info": {
+    "base_skill": "LLM2-python-best-practices (55 rules)",
+    "donor_skill": "LLM1-python-best-practices (40 rules)",
+    "rules_transplanted_from_donor": 15,
+    "rules_pruned_from_base": 5,
+    "final_rule_count": 65,
+    "final_category_count": 12
+  }
+}

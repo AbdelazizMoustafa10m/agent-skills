@@ -36,6 +36,7 @@ PROJECTS=(
   "harvx|$HOME/prj/prod/harvx|harvx"
   "raven|$HOME/prj/prod/raven|raven"
   "planora|$HOME/prj/planora|planora"
+  "orchcore|$HOME/prj/prod/orchcore|orchcore"
 )
 
 echo ""
