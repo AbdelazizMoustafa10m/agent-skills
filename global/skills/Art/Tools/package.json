@@ -1,0 +1,17 @@
+{
+  "name": "art-generate",
+  "version": "1.0.0",
+  "description": "Image generation CLI for the Art skill (Gemini + OpenAI)",
+  "type": "module",
+  "scripts": {
+    "install-deps": "bun install",
+    "generate": "bun Generate.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  }
+}
