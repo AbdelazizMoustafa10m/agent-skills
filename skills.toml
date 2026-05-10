@@ -26,3 +26,7 @@ scope = "raven"
 [projects.planora]
 path = "~/prj/planora"
 scope = "planora"
+
+[projects.cb]
+path = "~/prj/cb"
+scope = "cb"
