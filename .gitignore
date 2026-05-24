@@ -2,3 +2,6 @@
 *.bak
 *.bak.*
 node_modules/
+
+# skill-creator eval scaffolding (transient, kept locally only)
+*-workspace/
