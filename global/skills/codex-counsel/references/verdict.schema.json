@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "summary", "issues"],
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": ["APPROVED", "REVISE"],
+      "description": "APPROVED = ship it; REVISE = at least one issue must be addressed first."
+    },
+    "summary": {
+      "type": "string",
+      "description": "One-paragraph independent assessment: the overall judgment and the single most important point."
+    },
+    "issues": {
+      "type": "array",
+      "description": "Concrete problems found, most severe first. Empty array if none.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "summary", "location", "status"],
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": ["blocker", "major", "minor"]
+          },
+          "summary": {
+            "type": "string",
+            "description": "What the problem is and why it matters."
+          },
+          "location": {
+            "type": ["string", "null"],
+            "description": "Where it applies (file / section / step), or null if general."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["open", "resolved"],
+            "description": "First review: 'open'. On a resume re-review: set 'resolved' once the fix lands, else keep 'open'."
+          }
+        }
+      }
+    }
+  }
+}

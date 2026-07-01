@@ -1,0 +1,41 @@
+{
+  "skill_name": "codex-counsel",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Before I build this, get a second opinion from Codex on my plan: I'm going to add a POST /transfer endpoint that reads amount/from/to from the body, subtracts from one balance and adds to the other, saves both rows, and returns ok. Does this hold up?",
+      "expected_output": "Skill triggers, sends the plan to Codex read-only via the wrapper, and Claude reports back a synthesis that surfaces the real issues (atomicity/transaction, race conditions, validation, auth, idempotency) with Claude's own judgment on which matter most — not a bare relay.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I'm stuck deciding between a modular monolith and splitting into 3 microservices for our 4-person team's new billing system. Can you and another model both weigh in? I want to pressure-test my thinking before I commit.",
+      "expected_output": "Skill triggers as a design/decision consult (Mode 1). Claude frames the trade-offs, consults Codex for an independent take, then explicitly agrees/disagrees with reasons and surfaces any genuine disagreement rather than rubber-stamping.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "This refactor touches our auth middleware and session handling across 12 files and it's going out to prod tonight. Run an iterative review with Codex until it's satisfied before I merge.",
+      "expected_output": "Skill triggers Mode 2 (debate loop): Claude sends the diff to Codex with --output-schema (references/verdict.schema.json) for a structured verdict, makes real revisions when verdict is REVISE, resumes the same Codex session to check each issue's status flips to resolved, caps at 3-5 rounds, and reports the converged result or an unresolved disagreement.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Can you quickly format this CSV of quarterly numbers into a markdown table and sum the revenue column?",
+      "expected_output": "Skill should NOT trigger — this is a simple deterministic data task with no need for a cross-model second opinion. Negative/near-miss case.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Heads up — I'm about to force-push a full rewrite of our auth and session middleware straight to prod tonight, and I'm starting the migration now.",
+      "expected_output": "Skill triggers PROACTIVELY even though the user never asked for a second opinion — the work is high-stakes and irreversible (auth, session handling, prod, force-push), which the description names as a proactive trigger. Claude runs/offers a Codex consult (Mode 1, or Mode 2 given the stakes) before the change lands, then synthesizes rather than relaying. Tests the hardest positive: firing without an explicit request.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Rename the variable `tmp` to `userCount` in this function and fix the typo in its doc comment.",
+      "expected_output": "Skill should NOT trigger — a trivial, low-stakes, deterministic edit where cross-model review would be over-firing. Negative/near-miss guarding against over-triggering on any technical task just because it touches code.",
+      "files": []
+    }
+  ]
+}
