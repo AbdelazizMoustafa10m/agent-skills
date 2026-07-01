@@ -30,6 +30,20 @@ AGENT_DIRS=(".claude" ".codex" ".copilot" ".opencode" ".agent" ".factory" ".agen
 # Global agent home directories (user-level)
 GLOBAL_AGENT_HOMES=("$HOME/.claude" "$HOME/.codex" "$HOME/.gemini")
 
+# Global skills to link ONLY into Claude Code (~/.claude), never other harnesses.
+# e.g. codex-counsel consults Codex from the outside, so installing it *inside*
+# Codex would be pointless. Add a skill's directory name here to scope it Claude-only.
+CLAUDE_ONLY_SKILLS=("codex-counsel")
+
+# is_claude_only <skill-name> — true if the skill is in the Claude-only list above.
+is_claude_only() {
+  local s
+  for s in "${CLAUDE_ONLY_SKILLS[@]}"; do
+    [ "$s" = "$1" ] && return 0
+  done
+  return 1
+}
+
 # Project definitions: name|path|scope
 PROJECTS=(
   "finvault|$HOME/prj/prod/finvault|finvault"
@@ -86,12 +100,19 @@ link_one() {
 link_skills() {
   local source_dir="$1"
   local target_dir="$2"
+  local harness="${3:-}"   # claude|codex|gemini|… ; empty = no harness filter
   [ ! -d "$source_dir" ] && return
 
   mkdir -p "$target_dir"
   for skill in "$source_dir"/*/; do
     [ -f "$skill/SKILL.md" ] || continue
-    link_one "$skill" "$target_dir/$(basename "$skill")"
+    local sname
+    sname="$(basename "$skill")"
+    # Claude-only skills are linked into Claude Code alone; skip other harnesses.
+    if [ -n "$harness" ] && [ "$harness" != "claude" ] && is_claude_only "$sname"; then
+      continue
+    fi
+    link_one "$skill" "$target_dir/$sname"
   done
 }
 
@@ -144,7 +165,7 @@ if $has_global; then
     [ ! -d "$agent_home" ] && continue
     agent_name="$(basename "$agent_home")"
 
-    link_skills    "$GLOBAL_DIR/skills"   "$agent_home/skills"
+    link_skills    "$GLOBAL_DIR/skills"   "$agent_home/skills" "${agent_name#.}"
     link_md_files  "$GLOBAL_DIR/commands" "$agent_home/commands"
 
     summary=""
@@ -185,7 +206,7 @@ for project_def in "${PROJECTS[@]}"; do
     agent_dir="$project_path/$agent_dir_name"
     [ ! -d "$agent_dir" ] && continue
 
-    link_skills    "$scope_dir/skills"   "$agent_dir/skills"
+    link_skills    "$scope_dir/skills"   "$agent_dir/skills" "${agent_dir_name#.}"
     link_md_files  "$scope_dir/commands" "$agent_dir/commands"
 
     summary=""
