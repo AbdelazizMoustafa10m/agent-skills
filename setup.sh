@@ -33,7 +33,7 @@ GLOBAL_AGENT_HOMES=("$HOME/.claude" "$HOME/.codex" "$HOME/.gemini")
 # Global skills to link ONLY into Claude Code (~/.claude), never other harnesses.
 # e.g. codex-counsel consults Codex from the outside, so installing it *inside*
 # Codex would be pointless. Add a skill's directory name here to scope it Claude-only.
-CLAUDE_ONLY_SKILLS=("codex-counsel")
+CLAUDE_ONLY_SKILLS=("codex-counsel" "codex-implementer")
 
 # is_claude_only <skill-name> — true if the skill is in the Claude-only list above.
 is_claude_only() {

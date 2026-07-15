@@ -1,0 +1,41 @@
+{
+  "skill_name": "codex-implementer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We agreed on the plan in docs/rate-limit-plan.md. Have Codex implement it while you manage — spec it out, send it over, and review what comes back before you show me.",
+      "expected_output": "Skill triggers (Mode 2 / plan execution). Claude runs preflight (codex --version, git status), writes a ticket per plan step with goal/acceptance criteria/scope/verify commands plus 'do not commit', dispatches via the wrapper with workspace-write and --output-schema report.schema.json, cross-checks the report's changes[] against git diff, reviews the diff and runs the checks itself, iterates via --resume-id if needed, and reports faithfully.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Delegate this to Codex: rename our `fetchUser*` API helpers to `getUser*` across the whole repo, update all call sites and tests. I want you to double-check its work when it's done.",
+      "expected_output": "Skill triggers (Mode 1, mechanical batch). Claude writes a scoped ticket, likely dials effort down (--effort medium) for rote work and says so, dispatches with workspace-write, then verifies the three signals (exit code, report, git diff) and runs the test suite before reporting.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "I'm heading into meetings all afternoon. Take my approved checkout-flow plan and get it built — use Codex as the workhorse so your context stays free for managing, and don't move to the next step until the previous one is solid.",
+      "expected_output": "Skill triggers (Mode 2). Claude breaks the plan into reviewable tickets (~25 min of work each), uses one session with --resume-id for dependent steps, reviews each step's diff at a checkpoint before dispatching the next, never parallel-dispatches into the same tree, and reports plan status faithfully including any failed checks.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "There's an off-by-one in src/utils/pagination.ts — the last page drops one item. Fix it and add a regression test.",
+      "expected_output": "Skill should NOT trigger — a small, scoped fix Claude can implement directly faster than a spec-dispatch-review round trip (the toll booth shouldn't cost more than the road). Negative/near-miss case guarding against delegating everything.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Can you ask Codex to look over my new WebSocket reconnection logic and tell me if the backoff approach is sound before I build on top of it?",
+      "expected_output": "Skill should NOT trigger — this is a review/second-opinion request, which belongs to codex-counsel (read-only), not codex-implementer (workspace-write). Near-miss case that names Codex explicitly but wants counsel, not implementation.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Codex built the settings page but you said two tests fail. Send it back to fix them — it should remember what it did.",
+      "expected_output": "Skill triggers on the fix-round path: Claude resumes the same Codex session (--resume-id from the captured __CODEX_SESSION__ id) with a concrete fix list rather than starting a fresh session, re-verifies the three signals and reruns the failing tests, and respects the 3-round cap before taking over itself.",
+      "files": []
+    }
+  ]
+}

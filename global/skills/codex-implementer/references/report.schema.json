@@ -1,0 +1,81 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "summary", "changes", "commands_run", "open_items"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["COMPLETED", "PARTIAL", "BLOCKED"],
+      "description": "COMPLETED = all acceptance criteria met; PARTIAL = some work landed but criteria remain unmet; BLOCKED = could not proceed without input."
+    },
+    "summary": {
+      "type": "string",
+      "description": "One paragraph: what was implemented, the approach taken, and anything the reviewer should look at first."
+    },
+    "changes": {
+      "type": "array",
+      "description": "Every file touched. Must match the actual working-tree diff — the caller cross-checks.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "kind", "summary"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Repo-relative path of the file."
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["added", "modified", "deleted"]
+          },
+          "summary": {
+            "type": "string",
+            "description": "What changed in this file and why."
+          }
+        }
+      }
+    },
+    "commands_run": {
+      "type": "array",
+      "description": "Verification commands executed (tests, build, lint) and how they ended. Empty array if none were run.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command", "outcome", "detail"],
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": ["passed", "failed", "skipped"],
+            "description": "skipped = attempted but could not run (e.g. network off, missing dep); explain in detail."
+          },
+          "detail": {
+            "type": ["string", "null"],
+            "description": "Failure output or skip reason; null when it simply passed."
+          }
+        }
+      }
+    },
+    "open_items": {
+      "type": "array",
+      "description": "Anything unresolved: questions, blockers, out-of-scope needs discovered mid-task, follow-ups. Empty array if none.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "detail"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["question", "blocker", "followup", "out_of_scope"]
+          },
+          "detail": {
+            "type": "string",
+            "description": "What it is and what's needed to resolve it."
+          }
+        }
+      }
+    }
+  }
+}
