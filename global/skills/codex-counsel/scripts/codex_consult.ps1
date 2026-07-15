@@ -20,8 +20,8 @@
 .PARAMETER Context       Extra context (diff/plan/code) appended for Codex to judge.
 .PARAMETER ContextFile   File containing that context.
 .PARAMETER Cd            Working directory Codex should read from. Default: current dir.
-.PARAMETER Effort        Reasoning effort: low|medium|high|xhigh. Default (canonical): xhigh.
-.PARAMETER Model         Codex model override. Default: user's configured model.
+.PARAMETER Effort        Reasoning effort: low|medium|high|xhigh|max. Default (canonical): max.
+.PARAMETER Model         Codex model. Default (canonical): gpt-5.6-sol.
 .PARAMETER ResumeId      Resume an existing Codex session (for iterative review).
 .PARAMETER OutputSchema  JSON Schema file; forces Codex's final message to match it
                          (e.g. references/verdict.schema.json for the Mode 2 loop).
@@ -33,11 +33,10 @@ param(
     [string]$Context,
     [string]$ContextFile,
     [string]$Cd = (Get-Location).Path,
-    # Canonical default reasoning effort; SKILL.md / references only describe it.
-    # Kept at xhigh on purpose (deepest scrutiny) — change here if it ever needs to move.
-    [ValidateSet('low','medium','high','xhigh')]
-    [string]$Effort = 'xhigh',
-    [string]$Model,
+    # Canonical defaults; SKILL.md / references only describe them.
+    [ValidateSet('low','medium','high','xhigh','max')]
+    [string]$Effort = 'max',
+    [string]$Model = 'gpt-5.6-sol',
     [string]$ResumeId,
     [string]$OutputSchema
 )

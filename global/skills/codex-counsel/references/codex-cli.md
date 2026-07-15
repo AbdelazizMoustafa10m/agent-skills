@@ -2,7 +2,7 @@
 
 Load this only when the wrapper script misbehaves or you need a flag it doesn't
 expose. The wrapper (`scripts/codex_consult.sh` / `.ps1`) already handles the
-common path. Verified against `codex-cli` 0.142.4; smoke-tested on 0.142.5.
+common path. Verified against `codex-cli` 0.144.4 on July 14, 2026.
 
 ## Invocation
 
@@ -26,8 +26,8 @@ codex exec [OPTIONS] review        # built-in code review against the current re
 | `--skip-git-repo-check` | Allow running outside a git repo. Needed in your home dir and other non-repo paths; harmless inside a repo, so always pass it. |
 | `-C, --cd <DIR>` | Directory Codex treats as its working root (what it can read). |
 | `--add-dir <DIR>` | Extra readable directory alongside the workspace. |
-| `-m, --model <MODEL>` | Override the configured model. Leave unset to keep the user's model (a different family from Claude — the point of a second opinion). |
-| `-c, --config <key=value>` | Override config. Used by the wrapper as `-c model_reasoning_effort=<low\|medium\|high\|xhigh>`. Value parses as TOML. |
+| `-m, --model <MODEL>` | Select the model. The wrapper defaults to `gpt-5.6-sol`; pass this flag to override it. |
+| `-c, --config <key=value>` | Override config. Used by the wrapper as `-c model_reasoning_effort=<low\|medium\|high\|xhigh\|max>`. Value parses as TOML. |
 | `-o, --output-last-message <FILE>` | Write just the final answer to a file (clean capture). Supported by both `exec` and `exec resume` in this version. |
 | `--json` | Emit a JSONL event stream on stdout (used to read the session id). |
 | `--output-schema <FILE>` | Force the final message to match a JSON Schema. Mode 2 uses this with the bundled `references/verdict.schema.json` to get a structured `{verdict, summary, issues[]}` object (more reliable than scraping a text line). The wrapper exposes it as `--output-schema` / `-OutputSchema`. |
@@ -82,9 +82,9 @@ accept `-o`, so the wrapper captures the final message cleanly there too.
 - **Auth failures** → `codex login` (this machine uses CLI auth in
   `~/.codex/auth.json`; no API key env var is required). A one-off key override is
   `CODEX_API_KEY=… codex exec …`.
-- **Very slow responses are expected** → the wrapper defaults to `xhigh`
-  reasoning (matching the global `gpt-5.5`/`xhigh` config) because a second opinion
-  is worth the wait. For a faster, shallower answer pass `--effort medium`/`high`.
+- **Very slow responses are expected** → the wrapper defaults to
+  `gpt-5.6-sol` with `max` reasoning because a second opinion is worth the wait.
+  For a faster, shallower answer pass `--effort medium`, `high`, or `xhigh`.
 - **Garbled multi-line prompt** → never inline a diff into the shell; always use
   `--prompt-file`/`--context-file` (or the `.ps1` equivalents) so it travels via stdin.
 - **macOS/Linux** → the wrapper is `scripts/codex_consult.sh`; ensure it's
@@ -95,5 +95,7 @@ accept `-o`, so the wrapper captures the final message cleanly there too.
 
 ## Sources
 
+- OpenAI Codex Manual — [Models](https://learn.chatgpt.com/docs/models.md)
+  (`gpt-5.6-sol` recommendations and Max reasoning guidance).
 - OpenAI Developers — Codex CLI command-line options & non-interactive mode.
-- `codex exec --help` (codex-cli 0.142.5, the installed version).
+- `codex exec --help` (codex-cli 0.144.4, the installed version on July 14, 2026).

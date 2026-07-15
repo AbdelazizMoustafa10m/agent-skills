@@ -11,16 +11,15 @@
 #
 # Usage:
 #   codex_consult.sh --prompt-file P [--context-file C] [--cd DIR]
-#                    [--effort low|medium|high|xhigh] [--model M] [--resume-id ID]
+#                    [--effort low|medium|high|xhigh|max] [--model M] [--resume-id ID]
 #                    [--output-schema FILE]
 #   (--prompt "text" and --context "text" also accepted)
 set -euo pipefail
 
-# EFFORT is the canonical default reasoning effort and the single source of truth
-# for that value — SKILL.md / references only describe it. Kept at xhigh on purpose
-# (deepest scrutiny; the wait is the point); change it here if it ever needs to move.
+# MODEL and EFFORT are the canonical defaults; SKILL.md / references only describe
+# them. Keep counsel on the strongest available pairing unless the user overrides it.
 PROMPT="" PROMPT_FILE="" CONTEXT="" CONTEXT_FILE=""
-CD="$(pwd)" EFFORT="xhigh" MODEL="" RESUME_ID="" OUTPUT_SCHEMA=""
+CD="$(pwd)" EFFORT="max" MODEL="gpt-5.6-sol" RESUME_ID="" OUTPUT_SCHEMA=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -36,6 +35,11 @@ while [ $# -gt 0 ]; do
     *) echo "Unknown arg: $1" >&2; exit 2;;
   esac
 done
+
+case "$EFFORT" in
+  low|medium|high|xhigh|max) ;;
+  *) echo "Invalid effort: $EFFORT (expected low, medium, high, xhigh, or max)" >&2; exit 2;;
+esac
 
 [ -n "$PROMPT_FILE" ] && PROMPT="$(cat "$PROMPT_FILE")"
 [ -n "$PROMPT" ] || { echo "Provide --prompt or --prompt-file." >&2; exit 2; }

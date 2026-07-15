@@ -53,7 +53,7 @@ your code — `read-only` sandbox, never writes — so it's safe to point at any
 
 ```
 scripts/codex_consult.sh --prompt-file <path> [--context-file <path>] [--cd <dir>]
-    [--effort low|medium|high|xhigh] [--model <name>] [--resume-id <id>]
+    [--effort low|medium|high|xhigh|max] [--model <name>] [--resume-id <id>]
     [--output-schema <path>]
 ```
 
@@ -78,21 +78,23 @@ plan, or code in a context file and pass `--context-file`; it reaches Codex as a
 
 ### Effort and model
 
-The wrapper defaults to `xhigh` reasoning — the deepest setting. A second opinion
-is worth waiting for, so default to thoroughness over speed; expect consults to
-take appreciably longer (tens of seconds to a few minutes) than an ordinary reply.
-That's the trade you're making on purpose. Dial it down only when you want a fast
-answer and the stakes are genuinely low:
+The wrapper defaults to `gpt-5.6-sol` with `max` reasoning, the strongest counsel
+pairing as of July 14, 2026. A second opinion is worth waiting for, so default to
+thoroughness over speed; expect consults to take appreciably longer (tens of
+seconds to a few minutes) than an ordinary reply. That's the trade you're making
+on purpose. Dial it down only when you want a faster answer and the stakes are
+genuinely low:
 
 - `--effort medium` — quick sanity checks, "am I missing something obvious?"
 - `--effort high` — a solid review with a faster turnaround.
-- `--effort xhigh` — default; the deepest scrutiny for plans, diffs, and hard calls.
+- `--effort xhigh` — very deep scrutiny with less latency than the maximum level.
+- `--effort max` — default; the deepest scrutiny for plans, diffs, and hard calls.
 
 When you do drop the effort for speed, it's worth telling the user — they asked for
 a second opinion, and a shallower one is a different thing than the default.
 
-Leave `--model` unset to use the user's configured Codex model (a different family
-from you, which is exactly what you want). Only override if the user asks.
+Leave `--model` unset to use the wrapper's `gpt-5.6-sol` default. Override it only
+when the user asks for a different model.
 
 ## Mode 1 — Consult (one-shot)
 

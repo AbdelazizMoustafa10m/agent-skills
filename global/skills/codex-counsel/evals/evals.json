@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Before I build this, get a second opinion from Codex on my plan: I'm going to add a POST /transfer endpoint that reads amount/from/to from the body, subtracts from one balance and adds to the other, saves both rows, and returns ok. Does this hold up?",
-      "expected_output": "Skill triggers, sends the plan to Codex read-only via the wrapper, and Claude reports back a synthesis that surfaces the real issues (atomicity/transaction, race conditions, validation, auth, idempotency) with Claude's own judgment on which matter most — not a bare relay.",
+      "expected_output": "Skill triggers, sends the plan to Codex read-only via the wrapper using its gpt-5.6-sol/max defaults, and Claude reports back a synthesis that surfaces the real issues (atomicity/transaction, race conditions, validation, auth, idempotency) with Claude's own judgment on which matter most — not a bare relay.",
       "files": []
     },
     {
