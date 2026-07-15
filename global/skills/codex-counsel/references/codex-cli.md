@@ -63,10 +63,21 @@ codex exec resume --last       --json --skip-git-repo-check -o result.txt -
 Resuming reopens the prior session so Codex remembers what it already flagged and
 can verify your fixes. Prefer resuming **by id** (captured from the first call's
 `__CODEX_SESSION__:` line) over `--last` — `--last` grabs the most recent session
-globally, which is wrong if other Codex sessions are running. Note `resume` does
-**not** accept `-s/--sandbox` or `-C/--cd` (it inherits the original session's
-sandbox and working dir); passing them errors with `unexpected argument`. It does
-accept `-o`, so the wrapper captures the final message cleanly there too.
+globally, which is wrong if other Codex sessions are running.
+
+Two resume quirks, both verified on 0.144.4:
+
+- `resume` does **not** accept `-s/--sandbox` or `-C/--cd` (passing them errors
+  with `unexpected argument`). The sandbox **mode** carries over, so a resumed
+  counsel session stays read-only.
+- But the **workspace root does not carry over** — the resumed process derives
+  the project boundary from its *current working directory*, not the original
+  session. The wrapper guards this by `cd`-ing into `--cd` before every
+  invocation — so keep passing the same `--cd` on resume calls, or the resumed
+  session may be looking at the wrong project.
+
+`resume` does accept `-o`, so the wrapper captures the final message cleanly
+there too.
 
 ## Capturing output by hand
 

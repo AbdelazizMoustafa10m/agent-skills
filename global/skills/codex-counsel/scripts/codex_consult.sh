@@ -51,9 +51,12 @@ PAYLOAD="$PROMPT"
 --- CONTEXT (plan / diff / code to evaluate) ---
 $CONTEXT"
 
-# Build argument list. `resume` inherits the original session's sandbox + cwd
-# and rejects -s/-C, so pass those only on a fresh call. Both forms support -o.
+# Build argument list. `resume` inherits the original session's sandbox mode but
+# rejects -s/-C and derives the *workspace root from the process cwd* — so we cd
+# into $CD for every call (harmless on fresh calls, keeps a resumed session
+# pointed at the same project). Both forms support -o.
 OUT_FILE="$(mktemp)"
+cd "$CD"
 if [ -n "$RESUME_ID" ]; then
   args=(exec resume "$RESUME_ID" --json --skip-git-repo-check)
 else

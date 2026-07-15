@@ -61,8 +61,11 @@ if ($Context) {
 }
 
 # --- Build the codex exec argument list -------------------------------------
-# `resume` inherits the original session's sandbox + working dir and rejects
-# -s/-C, so those are only passed on a fresh call. Both forms support -o here.
+# `resume` inherits the original session's sandbox mode but rejects -s/-C and
+# derives the *workspace root from the process cwd* — so we cd into $Cd for
+# every call (harmless on fresh calls, keeps a resumed session pointed at the
+# same project). Both forms support -o here.
+Set-Location $Cd
 $outFile = [System.IO.Path]::GetTempFileName()
 if ($ResumeId) {
     $cliArgs = @('exec', 'resume', $ResumeId, '--json', '--skip-git-repo-check')
